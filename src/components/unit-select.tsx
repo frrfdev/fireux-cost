@@ -1,20 +1,39 @@
 import { useGetUnitsQuery } from '@/features/auth/hooks/use-get-units.query';
 
 import { SelectProps } from '@radix-ui/react-select';
-import { Select, SelectContent, SelectTrigger, SelectValue } from './ui/select';
+import { SelectItem, SelectPaginatedContent, SelectTrigger, SelectValue } from './ui/select-paginated';
+import { SelectPaginated } from './ui/select-paginated';
 
-type UnitSelectProps = SelectProps;
+type UnitSelectProps = SelectProps & {
+  onChange?: (value: string) => void;
+};
 
 export const UnitSelect = ({ ...props }: UnitSelectProps) => {
-  const { data } = useGetUnitsQuery();
-  console.log(data, 'data');
+  // Example usage
+  const { data, fetchNextPage, hasNextPage, isFetching } = useGetUnitsQuery();
+
+  const items = data?.pages.flatMap((page) => page.data) ?? [];
 
   return (
-    <Select {...props}>
-      <SelectTrigger className="">
-        <SelectValue placeholder="Escolha uma unidade" />
+    <SelectPaginated
+      {...props}
+      hasNextPage={hasNextPage}
+      isFetching={isFetching}
+      fetchNextPage={fetchNextPage}
+      onValueChange={(value) => {
+        props.onChange?.(value);
+      }}
+    >
+      <SelectTrigger>
+        <SelectValue placeholder="Select an option" />
       </SelectTrigger>
-      <SelectContent>{}</SelectContent>
-    </Select>
+      <SelectPaginatedContent>
+        {items.map((item) => (
+          <SelectItem key={item.id} value={item.id.toString()}>
+            {item.name}
+          </SelectItem>
+        ))}
+      </SelectPaginatedContent>
+    </SelectPaginated>
   );
 };

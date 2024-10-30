@@ -7,33 +7,17 @@ import { ElementDragType } from '@atlaskit/pragmatic-drag-and-drop/dist/types/in
 import { BaseEventPayload } from '@atlaskit/pragmatic-drag-and-drop/dist/types/internal-types';
 import { Product } from '@/features/auth/types/product';
 import { ProductIngredientConfigModal } from './components/product-ingredient-config.modal';
-
-const products: Product[] = [
-  {
-    id: '1',
-    name: 'Product 1',
-    priceUnitId: '1',
-    price: 10,
-  },
-  {
-    id: '2',
-    name: 'Product 2',
-    priceUnitId: '1',
-    price: 10,
-  },
-];
+import { useGetProducts } from '@/features/product/hooks/use-get-products';
 
 export { Page };
 
 function Page() {
-  const [productIngredients, setProductIngredients] = useState<
-    ProductIngredient[]
-  >([]);
-  const [availableProducts, setAvailableProducts] =
-    useState<Product[]>(products);
+  const { data: products } = useGetProducts();
+
+  const [productIngredients, setProductIngredients] = useState<ProductIngredient[]>([]);
+  const [availableProducts, setAvailableProducts] = useState<Product[]>([]);
   const [configModalOpen, setConfigModalOpen] = useState(false);
-  const [selectedProductIngredient, setSelectedProductIngredient] =
-    useState<ProductIngredient | null>(null);
+  const [selectedProductIngredient, setSelectedProductIngredient] = useState<ProductIngredient | null>(null);
 
   const handleDrop = useCallback(
     ({ source, location }: BaseEventPayload<ElementDragType>) => {
@@ -46,9 +30,7 @@ function Page() {
         // Retrieve the ID of the card being dragged
         const draggedProductId = source.data.productId;
 
-        const draggedProduct = availableProducts.find(
-          (product) => product.id === draggedProductId
-        );
+        const draggedProduct = availableProducts.find((product) => product.id === draggedProductId);
         if (draggedProduct) {
           console.log(draggedProduct, 'draggedProduct');
           const productIngredient = {
@@ -58,11 +40,7 @@ function Page() {
           setProductIngredients([...productIngredients, productIngredient]);
           setSelectedProductIngredient(productIngredient);
           setConfigModalOpen(true);
-          setAvailableProducts(
-            availableProducts.filter(
-              (product) => product.id !== draggedProductId
-            )
-          );
+          setAvailableProducts(availableProducts.filter((product) => product.id !== draggedProductId));
         }
       }
     },
@@ -70,26 +48,31 @@ function Page() {
   );
 
   const handleRemoveIngredient = (ingredientId: string) => {
-    const ingredient = products.find((p) => p.id === ingredientId);
+    const ingredient = products?.data?.find((p) => p.id === ingredientId);
 
     if (!ingredient) return;
 
     setAvailableProducts([...availableProducts, ingredient]);
-    setProductIngredients(
-      productIngredients.filter((p) => p.id !== ingredientId)
-    );
+    setProductIngredients(productIngredients.filter((p) => p.id !== ingredientId));
   };
+
+  const handleStoreProduct = () => {
+    setAvailableProducts(products?.data ?? []);
+    setProductIngredients([]);
+  };
+
+  useEffect(() => {
+    setAvailableProducts(products?.data ?? []);
+  }, [products]);
 
   useEffect(() => {
     // Only import and initialize drag-and-drop on the client side
     if (typeof window !== 'undefined') {
-      import('@atlaskit/pragmatic-drag-and-drop/element/adapter').then(
-        ({ monitorForElements }) => {
-          return monitorForElements({
-            onDrop: handleDrop,
-          });
-        }
-      );
+      import('@atlaskit/pragmatic-drag-and-drop/element/adapter').then(({ monitorForElements }) => {
+        return monitorForElements({
+          onDrop: handleDrop,
+        });
+      });
     }
   }, [handleDrop, availableProducts, productIngredients]);
 
@@ -97,6 +80,7 @@ function Page() {
     <LayoutPrivate>
       <div className="grid grid-cols-3 w-full h-full overflow-hidden">
         <ProductForm
+          onSuccess={handleStoreProduct}
           productIngredients={productIngredients}
           handleRemoveIngredient={handleRemoveIngredient}
           handleEditClick={(productIngredient) => {
@@ -115,11 +99,7 @@ function Page() {
           updateProductIngredient={(updatedProductIngredient) => {
             setSelectedProductIngredient(null);
             setProductIngredients(
-              productIngredients.map((p) =>
-                p.id === updatedProductIngredient.id
-                  ? updatedProductIngredient
-                  : p
-              )
+              productIngredients.map((p) => (p.id === updatedProductIngredient.id ? updatedProductIngredient : p))
             );
           }}
         />

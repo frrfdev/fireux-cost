@@ -1,9 +1,14 @@
 import { getUnits } from '@/features/unit/actions/get-units';
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 
 export const useGetUnitsQuery = () => {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: ['units'],
-    queryFn: () => getUnits(),
+    queryFn: getUnits,
+    getNextPageParam: (lastPage) =>
+      lastPage.meta.pagination.page === lastPage.meta.pagination.pageCount
+        ? undefined
+        : lastPage.meta.pagination.page + 1,
+    initialPageParam: 1,
   });
 };

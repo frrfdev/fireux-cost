@@ -1,13 +1,10 @@
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/features/auth/stores/use-auth-store';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { LogOut } from 'lucide-react';
 
 type Props = {
   children: React.ReactNode;
 };
-
-const queryClient = new QueryClient();
 
 const LayoutPrivate = (props: Props) => {
   const setUser = useAuthStore((state) => state.setUser);
@@ -29,9 +26,7 @@ const LayoutPrivate = (props: Props) => {
           </Button>
         </span>
       </nav>
-      <QueryClientProvider client={queryClient}>
-        {props.children}
-      </QueryClientProvider>
+      {props.children}
     </div>
   );
 };
