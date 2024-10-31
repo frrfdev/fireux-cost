@@ -1,68 +1,155 @@
-import { useForm } from 'react-hook-form';
+import { useForm, UseFormReturn } from 'react-hook-form';
 import { ProductIngredientsDroppable } from './product-ingredients.droppable';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Form, FormControl, FormLabel, FormItem, FormField, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormLabel,
+  FormItem,
+  FormField,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ProductIngredient } from '@/features/auth/types/product-ingredient';
 import { UnitSelect } from '@/components/unit-select';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { useStoreProduct } from '@/features/product/hooks/use-store-product';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { useProductStore } from '../stores/use-product-store';
+import { useUpdateProduct } from '@/features/product/hooks/use-update-product';
+import { ProductList } from './product.list';
+import { useGetProducts } from '@/features/product/hooks/use-get-products';
+import { ProductIngredientConfigModal } from './product-ingredient-config.modal';
+import { useProductFormDragController } from '../hooks/use-product-form-drag-controller';
+import { Product } from '@/features/auth/types/product';
 
-const formSchema = z.object({
-  name: z.string(),
+const productFormSchema = z.object({
+  name: z
+    .string()
+    .min(3, { message: 'O nome do produto deve ter pelo menos 3 caracteres' }),
   priceUnitId: z.string(),
   price: z.coerce.number(),
   manualPrice: z.boolean(),
+  ingredients: z.array(
+    z.object({
+      product: z.object({
+        documentId: z.string().optional(),
+        name: z.string(),
+        priceUnitId: z.string(),
+        price: z.number(),
+        manualPrice: z.boolean().optional(),
+        ingredients: z.array(z.any()),
+      }),
+      quantity: z.number(),
+    })
+  ),
 });
 
-type Props = {
-  productIngredients: ProductIngredient[];
-  handleRemoveIngredient: (ingredientId: string) => void;
-  handleEditClick: (productIngredient: ProductIngredient) => void;
-  onSuccess?: () => void;
+const INITIAL_VALUES = {
+  name: '',
+  priceUnitId: '',
+  price: 0,
+  manualPrice: false,
+  ingredients: [],
 };
 
-export const ProductForm = ({ productIngredients, handleRemoveIngredient, handleEditClick, onSuccess }: Props) => {
+export const ProductForm = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: '',
-      priceUnitId: '',
-      price: 0,
-      manualPrice: false,
-    },
+  const form = useForm<z.infer<typeof productFormSchema>>({
+    resolver: zodResolver(productFormSchema),
+    defaultValues: INITIAL_VALUES,
   });
 
+  const setProductEditing = useProductStore((state) => state.setEditProduct);
+  const productEditing = useProductStore((state) => state.editProduct);
+  const selectedProductIngredient = useProductStore(
+    (state) => state.selectedProductIngredient
+  );
+  const setSelectedProductIngredient = useProductStore(
+    (state) => state.setSelectedProductIngredient
+  );
+  const setConfigModalOpen = useProductStore(
+    (state) => state.setConfigModalOpen
+  );
+  const configModalOpen = useProductStore((state) => state.configModalOpen);
+
+  const ingredients = form.watch('ingredients');
+
   const { mutateAsync: storeProduct, isPending } = useStoreProduct();
+  const { mutateAsync: updateProduct } = useUpdateProduct();
+  const { data: products } = useGetProducts();
 
   const isManualPrice = form.watch('manualPrice');
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  function handleCancel() {
+    setProductEditing(null);
+    form.reset(INITIAL_VALUES);
+  }
+
+  function handleRemoveIngredient(ingredientId: string) {
+    const ingredient = products?.data?.find(
+      (p) => p.documentId === ingredientId
+    );
+
+    if (!ingredient) return;
+
+    form.setValue(
+      'ingredients',
+      ingredients.filter((p) => p.product.documentId !== ingredientId)
+    );
+  }
+
+  async function onSubmit(values: z.infer<typeof productFormSchema>) {
+    if (productEditing) {
+      await updateProduct(values, {
+        onSuccess: () => {
+          form.reset(INITIAL_VALUES);
+          toast({
+            title: 'Successo 😃',
+            description: 'O produto foi atualizado com sucesso',
+          });
+          queryClient.invalidateQueries({ queryKey: ['products'] });
+          setProductEditing(null);
+        },
+      });
+    }
     await storeProduct(values, {
       onSuccess: () => {
-        form.reset();
+        form.reset(INITIAL_VALUES);
         toast({
           title: 'Successo 😃',
           description: 'O produto foi adicionado com sucesso',
         });
         queryClient.invalidateQueries({ queryKey: ['products'] });
-        onSuccess?.();
       },
     });
   }
 
+  useProductFormDragController({
+    products: products?.data ?? [],
+    form: form as UseFormReturn<Product>,
+  });
+
+  useProductStore.subscribe(
+    (state) => state.editProduct,
+    (product) => {
+      if (product) form.reset(product);
+      else form.reset(INITIAL_VALUES);
+    }
+  );
+
   return (
-    <div className="grid grid-cols-2 col-span-2 h-full overflow-hidden relative">
+    <div className="grid grid-cols-3 w-full h-full overflow-hidden">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 h-full shadow-lg p-4">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-4 h-full shadow-lg p-4"
+        >
           <h1 className="text-2xl font-bold">Novo Produto</h1>
           <FormField
             control={form.control}
@@ -71,7 +158,7 @@ export const ProductForm = ({ productIngredients, handleRemoveIngredient, handle
               <FormItem>
                 <FormLabel>Nome</FormLabel>
                 <FormControl>
-                  <Input placeholder="shadcn" {...field} />
+                  <Input placeholder="Nome do produto" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -97,7 +184,10 @@ export const ProductForm = ({ productIngredients, handleRemoveIngredient, handle
             render={({ field }) => (
               <FormItem>
                 <div className="flex items-center gap-2 text-sm">
-                  <Switch checked={field.value} onCheckedChange={field.onChange} />
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
                   <span>Definir Preço Por Unidade?</span>
                 </div>
               </FormItem>
@@ -121,13 +211,44 @@ export const ProductForm = ({ productIngredients, handleRemoveIngredient, handle
           <Button type="submit" className="w-full" isLoading={isPending}>
             Criar
           </Button>
+          <Button
+            type="button"
+            className="w-full"
+            variant="secondary"
+            onClick={handleCancel}
+          >
+            Cancelar
+          </Button>
         </form>
       </Form>
       <ProductIngredientsDroppable
+        handleEditClick={(product) => {
+          setSelectedProductIngredient(product);
+          setConfigModalOpen(true);
+        }}
         handleRemoveIngredient={handleRemoveIngredient}
-        handleEditClick={handleEditClick}
-        productIngredients={productIngredients}
+        productIngredients={ingredients}
       ></ProductIngredientsDroppable>
+      <ProductList products={products?.data ?? []}></ProductList>
+      {selectedProductIngredient ? (
+        <ProductIngredientConfigModal
+          open={configModalOpen}
+          onOpenChange={setConfigModalOpen}
+          productIngredient={selectedProductIngredient}
+          updateProductIngredient={(updatedProductIngredient) => {
+            setSelectedProductIngredient(null);
+            form.setValue(
+              'ingredients',
+              ingredients.map((p) =>
+                p.product.documentId ===
+                updatedProductIngredient.product.documentId
+                  ? updatedProductIngredient
+                  : p
+              )
+            );
+          }}
+        />
+      ) : null}
     </div>
   );
 };

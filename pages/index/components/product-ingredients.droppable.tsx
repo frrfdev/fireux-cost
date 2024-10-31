@@ -64,22 +64,27 @@ export const ProductIngredientsDroppable = ({
           <div className="flex flex-wrap flex-col gap-4 w-full h-full overflow-y-auto">
             {productIngredients.map((ingredient) => (
               <div
-                key={ingredient.id}
+                key={ingredient.product.documentId}
                 className="p-2 rounded-md shadow-sm border border-gray-200 h-min w-full text-black flex items-center justify-between"
               >
-                <span>{ingredient.name}</span>
+                <span>{ingredient.product.name}</span>
                 <span>{ingredient.quantity}x</span>
                 <span>
                   {Intl.NumberFormat('pt-BR', {
                     currency: 'BRL',
                     style: 'currency',
-                  }).format(ingredient.quantity * ingredient.price)}
+                  }).format(ingredient.quantity * ingredient.product.price)}
                 </span>
                 <div className="flex gap-2">
                   <Button onClick={() => handleEditClick(ingredient)}>
                     <Edit></Edit>
                   </Button>
-                  <Button onClick={() => handleRemoveIngredient(ingredient.id)}>
+                  <Button
+                    onClick={() =>
+                      ingredient.product.documentId &&
+                      handleRemoveIngredient(ingredient.product.documentId)
+                    }
+                  >
                     <Trash></Trash>
                   </Button>
                 </div>

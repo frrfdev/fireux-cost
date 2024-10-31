@@ -6,7 +6,7 @@ export const useGetUnitsQuery = () => {
     queryKey: ['units'],
     queryFn: getUnits,
     getNextPageParam: (lastPage) =>
-      lastPage.meta.pagination.page === lastPage.meta.pagination.pageCount
+      lastPage.meta.pagination.page >= lastPage.meta.pagination.pageCount
         ? undefined
         : lastPage.meta.pagination.page + 1,
     initialPageParam: 1,

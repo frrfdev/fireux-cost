@@ -1,5 +1,6 @@
 import { Product } from './product';
 
-export type ProductIngredient = Product & {
+export type ProductIngredient = {
   quantity: number;
+  product: Product;
 };

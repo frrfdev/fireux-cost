@@ -27,7 +27,7 @@ export const ProductList = ({ products }: Props) => {
       <ul className="w-full overflow-y-auto gap-2 flex flex-col">
         {filteredProducts.map((product, index) => (
           <ProductRowDraggable
-            key={product.id}
+            key={product.documentId}
             product={product}
             index={index}
           />

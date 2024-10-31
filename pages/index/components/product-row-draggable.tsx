@@ -1,15 +1,20 @@
 import { Product } from '@/features/auth/types/product';
 import invariant from 'tiny-invariant';
-import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import {
+  draggable,
+  dropTargetForElements,
+} from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { useEffect, useRef, useState } from 'react';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { attachClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { cn } from '@/lib/utils';
-import { GripVertical, Trash } from 'lucide-react';
+import { Edit, GripVertical, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DeleteDialog } from '@/components/ui/delete-dialog';
 import { useDeleteProduct } from '@/features/product/hooks/use-delete-product';
-import { useQueryClient } from '@tanstack/react-query';
+import { useIsMutating, useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
+import { useProductStore } from '../stores/use-product-store';
 
 type Props = {
   product: Product;
@@ -19,16 +24,26 @@ type Props = {
 export const ProductRowDraggable = ({ product }: Props) => {
   const productRef = useRef(null);
   const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const setProductEditing = useProductStore((state) => state.setEditProduct);
+  const productEditing = useProductStore((state) => state.editProduct);
 
   const [isDragging, setIsDragging] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
-  const { mutateAsync: deleteProduct, isPending: isDeleting } = useDeleteProduct();
+  const { mutateAsync: deleteProduct, isPending: isDeleting } =
+    useDeleteProduct();
+
+  const isUpdatingProduct = useIsMutating({ mutationKey: ['update-product'] });
 
   const handleDeleteProduct = async () => {
     await deleteProduct(product);
     queryClient.invalidateQueries({ queryKey: ['products'] });
     setOpenDeleteDialog(false);
+    toast({
+      title: 'Successo',
+      description: 'Produto Removido com Sucesso 😣',
+    });
   };
 
   useEffect(() => {
@@ -38,14 +53,17 @@ export const ProductRowDraggable = ({ product }: Props) => {
     return combine(
       draggable({
         element: productEl,
-        getInitialData: () => ({ type: 'product', productId: product.id }),
+        getInitialData: () => ({
+          type: 'product',
+          productId: product.documentId,
+        }),
         onDragStart: () => setIsDragging(true),
         onDrop: () => setIsDragging(false),
       }),
       dropTargetForElements({
         element: productEl,
         getData: ({ input, element }) => {
-          const data = { type: 'product', productId: product.id };
+          const data = { type: 'product', productId: product.documentId };
 
           return attachClosestEdge(data, {
             input,
@@ -59,7 +77,7 @@ export const ProductRowDraggable = ({ product }: Props) => {
 
   return (
     <li
-      key={product.id}
+      key={product.documentId}
       className={cn(
         'shadow-sm border border-gray-100 rounded-md p-2 bg-white flex gap-2 items-center justify-between cursor-grab'
       )}
@@ -69,6 +87,20 @@ export const ProductRowDraggable = ({ product }: Props) => {
         <GripVertical size={16} className="text-gray-400"></GripVertical>
         <span>{product.name}</span>
       </div>
+      <span>
+        {Intl.NumberFormat('pt-BR', {
+          style: 'currency',
+          currency: 'BRL',
+        }).format(
+          product.manualPrice
+            ? product.price
+            : product.ingredients.reduce(
+                (acc, ingredient) =>
+                  acc + ingredient.product.price * ingredient.quantity,
+                0
+              )
+        )}
+      </span>
       <DeleteDialog<Product>
         isOpen={openDeleteDialog}
         onClose={() => setOpenDeleteDialog(false)}
@@ -77,9 +109,29 @@ export const ProductRowDraggable = ({ product }: Props) => {
         title="Confirmar exclusão do produto"
         description={`Tem certeza que deseja excluir o produto "${product.name}"?`}
       />
-      <Button variant="destructive" size="icon" isLoading={isDeleting} onClick={() => setOpenDeleteDialog(true)}>
-        <Trash size={16} className="text-white"></Trash>
-      </Button>
+      <div className="flex gap-2">
+        <Button
+          variant="default"
+          size="icon"
+          isLoading={
+            !!isUpdatingProduct &&
+            productEditing?.documentId === product.documentId
+          }
+          onClick={async () => {
+            setProductEditing(product);
+          }}
+        >
+          <Edit size={16} className="text-white"></Edit>
+        </Button>
+        <Button
+          variant="destructive"
+          size="icon"
+          isLoading={isDeleting}
+          onClick={() => setOpenDeleteDialog(true)}
+        >
+          <Trash size={16} className="text-white"></Trash>
+        </Button>
+      </div>
     </li>
   );
 };
