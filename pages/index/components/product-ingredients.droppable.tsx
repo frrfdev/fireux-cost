@@ -4,7 +4,7 @@ import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element
 import { useEffect, useRef } from 'react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { ProductIngredient } from '@/features/auth/types/product-ingredient';
+import { ProductIngredient } from '@/features/product/types/product-ingredient';
 import { Button } from '@/components/ui/button';
 
 export const EmptyProductIngredientsDroppable = () => {
@@ -13,9 +13,7 @@ export const EmptyProductIngredientsDroppable = () => {
       <h3>
         <Plus size={80} />
       </h3>
-      <p className="text-lg font-bold uppercase text-center">
-        Adicione os ingredientes do seu produto aqui
-      </p>
+      <p className="text-lg font-bold uppercase text-center">Adicione os ingredientes do seu produto aqui</p>
     </div>
   );
 };
@@ -26,11 +24,7 @@ type Props = {
   handleEditClick: (productIngredient: ProductIngredient) => void;
 };
 
-export const ProductIngredientsDroppable = ({
-  productIngredients,
-  handleRemoveIngredient,
-  handleEditClick,
-}: Props) => {
+export const ProductIngredientsDroppable = ({ productIngredients, handleRemoveIngredient, handleEditClick }: Props) => {
   const columnRef = useRef(null);
   const [isDraggedOver, setIsDraggedOver] = useState(false);
 
@@ -81,8 +75,7 @@ export const ProductIngredientsDroppable = ({
                   </Button>
                   <Button
                     onClick={() =>
-                      ingredient.product.documentId &&
-                      handleRemoveIngredient(ingredient.product.documentId)
+                      ingredient.product.documentId && handleRemoveIngredient(ingredient.product.documentId)
                     }
                   >
                     <Trash></Trash>

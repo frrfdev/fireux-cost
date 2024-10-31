@@ -1,9 +1,6 @@
-import { Product } from '@/features/auth/types/product';
+import { Product } from '@/features/product/types/product';
 import invariant from 'tiny-invariant';
-import {
-  draggable,
-  dropTargetForElements,
-} from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { useEffect, useRef, useState } from 'react';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { attachClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
@@ -31,8 +28,7 @@ export const ProductRowDraggable = ({ product }: Props) => {
   const [isDragging, setIsDragging] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
-  const { mutateAsync: deleteProduct, isPending: isDeleting } =
-    useDeleteProduct();
+  const { mutateAsync: deleteProduct, isPending: isDeleting } = useDeleteProduct();
 
   const isUpdatingProduct = useIsMutating({ mutationKey: ['update-product'] });
 
@@ -94,11 +90,7 @@ export const ProductRowDraggable = ({ product }: Props) => {
         }).format(
           product.manualPrice
             ? product.price
-            : product.ingredients.reduce(
-                (acc, ingredient) =>
-                  acc + ingredient.product.price * ingredient.quantity,
-                0
-              )
+            : product.ingredients.reduce((acc, ingredient) => acc + ingredient.product.price * ingredient.quantity, 0)
         )}
       </span>
       <DeleteDialog<Product>
@@ -113,22 +105,14 @@ export const ProductRowDraggable = ({ product }: Props) => {
         <Button
           variant="default"
           size="icon"
-          isLoading={
-            !!isUpdatingProduct &&
-            productEditing?.documentId === product.documentId
-          }
+          isLoading={!!isUpdatingProduct && productEditing?.documentId === product.documentId}
           onClick={async () => {
             setProductEditing(product);
           }}
         >
           <Edit size={16} className="text-white"></Edit>
         </Button>
-        <Button
-          variant="destructive"
-          size="icon"
-          isLoading={isDeleting}
-          onClick={() => setOpenDeleteDialog(true)}
-        >
+        <Button variant="destructive" size="icon" isLoading={isDeleting} onClick={() => setOpenDeleteDialog(true)}>
           <Trash size={16} className="text-white"></Trash>
         </Button>
       </div>

@@ -6,33 +6,24 @@ import {
 import { useCallback, useEffect } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { useProductStore } from '../stores/use-product-store';
-import { Product } from '@/features/auth/types/product';
+import { Product } from '@/features/product/types/product';
 
 type UseProductFormDragControllerProps = {
   products: Product[];
   form: UseFormReturn<Product>;
 };
 
-export const useProductFormDragController = ({
-  products,
-  form,
-}: UseProductFormDragControllerProps) => {
+export const useProductFormDragController = ({ products, form }: UseProductFormDragControllerProps) => {
   const ingredients = form.watch('ingredients');
 
-  const setSelectedProductIngredient = useProductStore(
-    (state) => state.setSelectedProductIngredient
-  );
-  const setConfigModalOpen = useProductStore(
-    (state) => state.setConfigModalOpen
-  );
+  const setSelectedProductIngredient = useProductStore((state) => state.setSelectedProductIngredient);
+  const setConfigModalOpen = useProductStore((state) => state.setConfigModalOpen);
 
   const handleProductDrop = useCallback(
     (source: ElementDragPayload) => {
       const draggedProductId = source.data.productId;
 
-      const draggedProduct = products?.find(
-        (product) => product.documentId === draggedProductId
-      );
+      const draggedProduct = products?.find((product) => product.documentId === draggedProductId);
       if (draggedProduct) {
         const productIngredient = {
           product: draggedProduct,
@@ -59,13 +50,11 @@ export const useProductFormDragController = ({
   useEffect(() => {
     // Only import and initialize drag-and-drop on the client side
     if (typeof window !== 'undefined') {
-      import('@atlaskit/pragmatic-drag-and-drop/element/adapter').then(
-        ({ monitorForElements }) => {
-          return monitorForElements({
-            onDrop: handleDrop,
-          });
-        }
-      );
+      import('@atlaskit/pragmatic-drag-and-drop/element/adapter').then(({ monitorForElements }) => {
+        return monitorForElements({
+          onDrop: handleDrop,
+        });
+      });
     }
   }, [handleDrop, ingredients]);
 };

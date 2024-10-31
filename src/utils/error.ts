@@ -1,6 +1,6 @@
 import { AxiosError } from 'axios';
 
-import { StrapiApiError } from '@/features/auth/types/strapi-api-error';
+import { StrapiApiError } from '@/types/strapi-api-error';
 import { toast } from '@/hooks/use-toast';
 
 export const ErrorHandler = (error: AxiosError) => {

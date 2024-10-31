@@ -1,5 +1,5 @@
-import { Product } from '@/features/auth/types/product';
-import { ProductIngredient } from '@/features/auth/types/product-ingredient';
+import { Product } from '@/features/product/types/product';
+import { ProductIngredient } from '@/features/product/types/product-ingredient';
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 
@@ -7,9 +7,7 @@ type ProductStore = {
   editProduct: Product | null;
   setEditProduct: (product: Product | null) => void;
   selectedProductIngredient: ProductIngredient | null;
-  setSelectedProductIngredient: (
-    productIngredient: ProductIngredient | null
-  ) => void;
+  setSelectedProductIngredient: (productIngredient: ProductIngredient | null) => void;
   configModalOpen: boolean;
   setConfigModalOpen: (open: boolean) => void;
 };
@@ -19,8 +17,7 @@ export const useProductStore = create<ProductStore>()(
     editProduct: null,
     setEditProduct: (product) => set({ editProduct: product }),
     selectedProductIngredient: null,
-    setSelectedProductIngredient: (productIngredient) =>
-      set({ selectedProductIngredient: productIngredient }),
+    setSelectedProductIngredient: (productIngredient) => set({ selectedProductIngredient: productIngredient }),
     configModalOpen: false,
     setConfigModalOpen: (open) => set({ configModalOpen: open }),
   }))

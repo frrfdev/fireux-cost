@@ -1,12 +1,7 @@
 import { useGetUnitsQuery } from '@/features/auth/hooks/use-get-units.query';
 
 import { SelectProps } from '@radix-ui/react-select';
-import {
-  SelectItem,
-  SelectPaginatedContent,
-  SelectTrigger,
-  SelectValue,
-} from './ui/select-paginated';
+import { SelectItem, SelectPaginatedContent, SelectTrigger, SelectValue } from './ui/select-paginated';
 import { SelectPaginated } from './ui/select-paginated';
 
 type UnitSelectProps = SelectProps & {
@@ -15,8 +10,7 @@ type UnitSelectProps = SelectProps & {
 
 export const UnitSelect = ({ ...props }: UnitSelectProps) => {
   // Example usage
-  const { data, fetchNextPage, hasNextPage, isFetching, isLoading } =
-    useGetUnitsQuery();
+  const { data, fetchNextPage, hasNextPage, isFetching, isLoading } = useGetUnitsQuery();
 
   const items = data?.pages.flatMap((page) => page.data) ?? [];
 
@@ -31,14 +25,11 @@ export const UnitSelect = ({ ...props }: UnitSelectProps) => {
       }}
     >
       <SelectTrigger>
-        <SelectValue
-          placeholder="Selecione uma unidade"
-          className="text-gray-400"
-        />
+        <SelectValue placeholder="Selecione uma unidade" className="text-gray-400" />
       </SelectTrigger>
       <SelectPaginatedContent>
         {items.map((item) => (
-          <SelectItem key={item.id} value={item.id.toString()}>
+          <SelectItem key={item.documentId} value={item.documentId}>
             {item.name}
           </SelectItem>
         ))}

@@ -1,4 +1,4 @@
-import { Product } from '@/features/auth/types/product';
+import { Product } from '@/features/product/types/product';
 
 import { api } from '@/lib/api';
 
