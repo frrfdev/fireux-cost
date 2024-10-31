@@ -19,7 +19,7 @@ import { ProductIngredientConfigModal } from './product-ingredient-config.modal'
 import { useProductFormDragController } from '../hooks/use-product-form-drag-controller';
 import { Product, ProductPopulated } from '@/features/product/types/product';
 
-const convertToFormRegister = (product: ProductPopulated) => {
+export const convertToProductFormRegister = (product: ProductPopulated) => {
   return {
     ...product,
     priceUnit: product.priceUnit?.documentId ?? '',
@@ -69,6 +69,8 @@ export const ProductForm = () => {
   const setSelectedProductIngredient = useProductStore((state) => state.setSelectedProductIngredient);
   const setConfigModalOpen = useProductStore((state) => state.setConfigModalOpen);
   const configModalOpen = useProductStore((state) => state.configModalOpen);
+  const selectedUnit = useProductStore((state) => state.selectedUnit);
+  const setSelectedUnit = useProductStore((state) => state.setSelectedUnit);
 
   const ingredients = form.watch('ingredients');
 
@@ -96,32 +98,53 @@ export const ProductForm = () => {
 
   async function onSubmit(values: z.infer<typeof productFormSchema>) {
     if (productEditing) {
-      await updateProduct(values, {
+      return await updateProduct(
+        {
+          documentId: productEditing.documentId ?? '',
+          product: {
+            ...values,
+            ingredients: values.ingredients.map((i) => ({
+              product: i.product.documentId ?? '',
+              quantity: i.quantity,
+            })),
+          },
+        },
+        {
+          onSuccess: () => {
+            form.reset(INITIAL_VALUES);
+            toast({
+              title: 'Successo 😃',
+              description: 'O produto foi atualizado com sucesso',
+            });
+            queryClient.invalidateQueries({ queryKey: ['products'] });
+            setProductEditing(null);
+          },
+        }
+      );
+    }
+    await storeProduct(
+      {
+        ...values,
+        ingredients: values.ingredients.map((i) => ({
+          product: i.product.documentId ?? '',
+          quantity: i.quantity,
+        })),
+      },
+      {
         onSuccess: () => {
           form.reset(INITIAL_VALUES);
           toast({
             title: 'Successo 😃',
-            description: 'O produto foi atualizado com sucesso',
+            description: 'O produto foi adicionado com sucesso',
           });
           queryClient.invalidateQueries({ queryKey: ['products'] });
-          setProductEditing(null);
         },
-      });
-    }
-    await storeProduct(values, {
-      onSuccess: () => {
-        form.reset(INITIAL_VALUES);
-        toast({
-          title: 'Successo 😃',
-          description: 'O produto foi adicionado com sucesso',
-        });
-        queryClient.invalidateQueries({ queryKey: ['products'] });
-      },
-    });
+      }
+    );
   }
 
   useProductFormDragController({
-    products: products?.data.map(convertToFormRegister) ?? [],
+    products: products?.data.map(convertToProductFormRegister) ?? [],
     form: form as UseFormReturn<Product>,
   });
 
@@ -162,7 +185,7 @@ export const ProductForm = () => {
               <FormItem>
                 <FormLabel>Unidade de Base de Cálculo</FormLabel>
                 <FormControl>
-                  <UnitSelect {...field} />
+                  <UnitSelect {...field} onValueChange={(_, option) => setSelectedUnit(option)} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -176,7 +199,11 @@ export const ProductForm = () => {
               <FormItem>
                 <div className="flex items-center gap-2 text-sm">
                   <Switch checked={field.value} onCheckedChange={field.onChange} />
-                  <span>Definir Preço Por Unidade?</span>
+                  {selectedUnit ? (
+                    <span>Definir Preço Por {selectedUnit?.name}?</span>
+                  ) : (
+                    <span className="text-red-500">Você precisa escolher uma unidade</span>
+                  )}
                 </div>
               </FormItem>
             )}
@@ -187,7 +214,10 @@ export const ProductForm = () => {
               name="price"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Preço por Unidade</FormLabel>
+                  <FormLabel>Preço por Unidade (R$)</FormLabel>
+                  <p role="button" className="text-xs underline cursor-pointer animate-pulse text-gray-500">
+                    Eu não sei o preço, me ajude a calcular
+                  </p>
                   <FormControl>
                     <Input type="number" {...field} />
                   </FormControl>
@@ -196,23 +226,43 @@ export const ProductForm = () => {
               )}
             />
           ) : null}
-          <Button type="submit" className="w-full" isLoading={isPending || isUpdating}>
+        </form>
+      </Form>
+      <div className="h-full w-full flex flex-col overflow-y-hidden">
+        <ProductIngredientsDroppable
+          handleEditClick={(product) => {
+            setSelectedProductIngredient(product);
+            setConfigModalOpen(true);
+          }}
+          handleRemoveIngredient={handleRemoveIngredient}
+          productIngredients={ingredients}
+        ></ProductIngredientsDroppable>
+        {!isManualPrice ? (
+          <div className="p-4 flex justify-between items-center">
+            <strong>Total:</strong>
+            <span>{`${Intl.NumberFormat('pt-BR', {
+              style: 'currency',
+              currency: 'BRL',
+            }).format(
+              ingredients.reduce((acc, ingredient) => acc + ingredient.product.price * ingredient.quantity, 0)
+            )}/${selectedUnit?.acronym ?? 'N.I'}`}</span>
+          </div>
+        ) : null}
+        <div className="p-4 flex flex-col gap-2">
+          <Button
+            type="submit"
+            className="w-full"
+            isLoading={isPending || isUpdating}
+            onClick={form.handleSubmit(onSubmit)}
+          >
             {productEditing ? 'Editar' : 'Criar'}
           </Button>
           <Button type="button" className="w-full" variant="secondary" onClick={handleCancel}>
             Cancelar
           </Button>
-        </form>
-      </Form>
-      <ProductIngredientsDroppable
-        handleEditClick={(product) => {
-          setSelectedProductIngredient(product);
-          setConfigModalOpen(true);
-        }}
-        handleRemoveIngredient={handleRemoveIngredient}
-        productIngredients={ingredients}
-      ></ProductIngredientsDroppable>
-      <ProductList products={products?.data.map(convertToFormRegister) ?? []}></ProductList>
+        </div>
+      </div>
+      <ProductList products={products?.data ?? []}></ProductList>
       {selectedProductIngredient ? (
         <ProductIngredientConfigModal
           open={configModalOpen}

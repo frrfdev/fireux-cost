@@ -10,6 +10,13 @@ export type Product = {
   ingredients: ProductIngredient[];
 };
 
+export type ProductFormRegister = Omit<Product, 'priceUnit' | 'ingredients'> & {
+  ingredients: {
+    product: string;
+    quantity: number;
+  }[];
+};
+
 export type ProductPopulated = Omit<Product, 'priceUnit' | 'ingredients'> & {
   priceUnit: PriceUnit;
   ingredients: ProductIngredientPopulated[];

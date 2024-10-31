@@ -1,4 +1,4 @@
-import { Product } from '@/features/product/types/product';
+import { ProductPopulated } from '@/features/product/types/product';
 import invariant from 'tiny-invariant';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { useEffect, useRef, useState } from 'react';
@@ -12,9 +12,10 @@ import { useDeleteProduct } from '@/features/product/hooks/use-delete-product';
 import { useIsMutating, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { useProductStore } from '../stores/use-product-store';
+import { convertToProductFormRegister } from './product.form';
 
 type Props = {
-  product: Product;
+  product: ProductPopulated;
   index: number;
 };
 
@@ -75,7 +76,7 @@ export const ProductRowDraggable = ({ product }: Props) => {
     <li
       key={product.documentId}
       className={cn(
-        'shadow-sm border border-gray-100 rounded-md p-2 bg-white flex gap-2 items-center justify-between cursor-grab'
+        'shadow-sm border border-gray-100 rounded-md p-2 bg-white grid grid-cols-3 gap-2 items-center justify-between cursor-grab'
       )}
       ref={productRef}
     >
@@ -84,16 +85,16 @@ export const ProductRowDraggable = ({ product }: Props) => {
         <span>{product.name}</span>
       </div>
       <span>
-        {Intl.NumberFormat('pt-BR', {
+        {`${Intl.NumberFormat('pt-BR', {
           style: 'currency',
           currency: 'BRL',
         }).format(
           product.manualPrice
             ? product.price
             : product.ingredients.reduce((acc, ingredient) => acc + ingredient.product.price * ingredient.quantity, 0)
-        )}
+        )}/${product.priceUnit?.acronym ?? 'N.I'}`}
       </span>
-      <DeleteDialog<Product>
+      <DeleteDialog<ProductPopulated>
         isOpen={openDeleteDialog}
         onClose={() => setOpenDeleteDialog(false)}
         onConfirm={handleDeleteProduct}
@@ -107,7 +108,7 @@ export const ProductRowDraggable = ({ product }: Props) => {
           size="icon"
           isLoading={!!isUpdatingProduct && productEditing?.documentId === product.documentId}
           onClick={async () => {
-            setProductEditing(product);
+            setProductEditing(convertToProductFormRegister(product));
           }}
         >
           <Edit size={16} className="text-white"></Edit>

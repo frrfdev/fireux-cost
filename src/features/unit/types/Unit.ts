@@ -6,4 +6,5 @@ export type Unit = {
   createdAt: string;
   updatedAt: string;
   publishedAt: string;
+  acronym: string;
 };

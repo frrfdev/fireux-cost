@@ -22,6 +22,7 @@ export const UnitSelect = ({ ...props }: UnitSelectProps) => {
       fetchNextPage={fetchNextPage}
       onValueChange={(value) => {
         props.onChange?.(value);
+        props.onValueChange?.(value, items.find((item) => item.documentId === value) ?? null);
       }}
     >
       <SelectTrigger>

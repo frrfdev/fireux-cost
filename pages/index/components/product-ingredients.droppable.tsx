@@ -45,7 +45,7 @@ export const ProductIngredientsDroppable = ({ productIngredients, handleRemoveIn
   }, []);
 
   return (
-    <div className="h-full w-full p-4 overflow-hidden">
+    <div className="h-full w-full flex flex-col p-4 overflow-hidden">
       <h2 className="text-center font-bold text-2xl mb-2">Ingredientes</h2>
       <div
         className={cn(
@@ -55,7 +55,7 @@ export const ProductIngredientsDroppable = ({ productIngredients, handleRemoveIn
         ref={columnRef}
       >
         {productIngredients.length ? (
-          <div className="flex flex-wrap flex-col gap-4 w-full h-full overflow-y-auto">
+          <div className="flex flex-col gap-4 w-full h-full overflow-y-auto">
             {productIngredients.map((ingredient) => (
               <div
                 key={ingredient.product.documentId}

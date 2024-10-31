@@ -1,10 +1,10 @@
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import { ProductRowDraggable } from './product-row-draggable';
-import { Product } from '@/features/product/types/product';
+import { ProductPopulated } from '@/features/product/types/product';
 
 type Props = {
-  products: Product[];
+  products: ProductPopulated[];
 };
 
 export const ProductList = ({ products }: Props) => {
