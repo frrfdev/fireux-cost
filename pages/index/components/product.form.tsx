@@ -262,7 +262,9 @@ export const ProductForm = () => {
           </Button>
         </div>
       </div>
-      <ProductList products={products?.data ?? []}></ProductList>
+      <ProductList
+        products={products?.data.filter((p) => !ingredients.find((i) => i.product.documentId === p.documentId)) ?? []}
+      ></ProductList>
       {selectedProductIngredient ? (
         <ProductIngredientConfigModal
           open={configModalOpen}
