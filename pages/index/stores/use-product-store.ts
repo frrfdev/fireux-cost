@@ -13,6 +13,8 @@ type ProductStore = {
   setConfigModalOpen: (open: boolean) => void;
   selectedUnit: Unit | null;
   setSelectedUnit: (unit: Unit | null) => void;
+  priceCalcDialogOpen: boolean;
+  setPriceCalcDialogOpen: (open: boolean) => void;
 };
 
 export const useProductStore = create<ProductStore>()(
@@ -25,5 +27,7 @@ export const useProductStore = create<ProductStore>()(
     setConfigModalOpen: (open) => set({ configModalOpen: open }),
     selectedUnit: null,
     setSelectedUnit: (unit) => set({ selectedUnit: unit }),
+    priceCalcDialogOpen: false,
+    setPriceCalcDialogOpen: (open) => set({ priceCalcDialogOpen: open }),
   }))
 );

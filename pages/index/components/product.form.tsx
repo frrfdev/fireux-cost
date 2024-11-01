@@ -18,6 +18,7 @@ import { useGetProducts } from '@/features/product/hooks/use-get-products';
 import { ProductIngredientConfigModal } from './product-ingredient-config.modal';
 import { useProductFormDragController } from '../hooks/use-product-form-drag-controller';
 import { Product, ProductPopulated } from '@/features/product/types/product';
+import { ProductPriceCalcDialog } from './product-price-calc-dialog';
 
 export const convertToProductFormRegister = (product: ProductPopulated) => {
   return {
@@ -71,6 +72,8 @@ export const ProductForm = () => {
   const configModalOpen = useProductStore((state) => state.configModalOpen);
   const selectedUnit = useProductStore((state) => state.selectedUnit);
   const setSelectedUnit = useProductStore((state) => state.setSelectedUnit);
+  const priceCalcDialogOpen = useProductStore((state) => state.priceCalcDialogOpen);
+  const setPriceCalcDialogOpen = useProductStore((state) => state.setPriceCalcDialogOpen);
 
   const ingredients = form.watch('ingredients');
 
@@ -94,6 +97,11 @@ export const ProductForm = () => {
       'ingredients',
       ingredients.filter((p) => p.product.documentId !== ingredientId)
     );
+  }
+
+  function handlePriceCalculate(price: number) {
+    form.setValue('price', price);
+    setPriceCalcDialogOpen(false);
   }
 
   async function onSubmit(values: z.infer<typeof productFormSchema>) {
@@ -185,7 +193,13 @@ export const ProductForm = () => {
               <FormItem>
                 <FormLabel>Unidade de Base de Cálculo</FormLabel>
                 <FormControl>
-                  <UnitSelect {...field} onValueChange={(_, option) => setSelectedUnit(option)} />
+                  <UnitSelect
+                    {...field}
+                    onValueChange={(_, option) => {
+                      setSelectedUnit(option);
+                      form.setValue('price', 0);
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -215,9 +229,14 @@ export const ProductForm = () => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Preço por Unidade (R$)</FormLabel>
-                  <p role="button" className="text-xs underline cursor-pointer animate-pulse text-gray-500">
+                  <button
+                    type="button"
+                    onClick={() => setPriceCalcDialogOpen(true)}
+                    role="button"
+                    className="text-xs underline cursor-pointer animate-pulse text-gray-500 user-select-none w-full text-start"
+                  >
                     Eu não sei o preço, me ajude a calcular
-                  </p>
+                  </button>
                   <FormControl>
                     <Input type="number" {...field} />
                   </FormControl>
@@ -265,6 +284,14 @@ export const ProductForm = () => {
       <ProductList
         products={products?.data.filter((p) => !ingredients.find((i) => i.product.documentId === p.documentId)) ?? []}
       ></ProductList>
+      {selectedUnit ? (
+        <ProductPriceCalcDialog
+          open={priceCalcDialogOpen}
+          onOpenChange={setPriceCalcDialogOpen}
+          onCalculate={handlePriceCalculate}
+          targetUnit={selectedUnit}
+        ></ProductPriceCalcDialog>
+      ) : null}
       {selectedProductIngredient ? (
         <ProductIngredientConfigModal
           open={configModalOpen}
