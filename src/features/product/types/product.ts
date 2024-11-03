@@ -1,5 +1,8 @@
 import { PriceUnit } from './price-unit';
-import { ProductIngredient, ProductIngredientPopulated } from './product-ingredient';
+import {
+  ProductIngredient,
+  ProductIngredientPopulated,
+} from './product-ingredient';
 
 export type Product = {
   documentId?: string;
@@ -10,7 +13,7 @@ export type Product = {
   ingredients: ProductIngredient[];
 };
 
-export type ProductFormRegister = Omit<Product, 'priceUnit' | 'ingredients'> & {
+export type ProductFormRegister = Omit<Product, 'ingredients'> & {
   ingredients: {
     product: string;
     quantity: number;

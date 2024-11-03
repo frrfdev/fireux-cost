@@ -13,7 +13,9 @@ export const EmptyProductIngredientsDroppable = () => {
       <h3>
         <Plus size={80} />
       </h3>
-      <p className="text-lg font-bold uppercase text-center">Adicione os ingredientes do seu produto aqui</p>
+      <p className="text-lg font-bold uppercase text-center">
+        Adicione os ingredientes do seu produto aqui
+      </p>
     </div>
   );
 };
@@ -24,7 +26,11 @@ type Props = {
   handleEditClick: (productIngredient: ProductIngredient) => void;
 };
 
-export const ProductIngredientsDroppable = ({ productIngredients, handleRemoveIngredient, handleEditClick }: Props) => {
+export const ProductIngredientsDroppable = ({
+  productIngredients,
+  handleRemoveIngredient,
+  handleEditClick,
+}: Props) => {
   const columnRef = useRef(null);
   const [isDraggedOver, setIsDraggedOver] = useState(false);
 
@@ -49,7 +55,7 @@ export const ProductIngredientsDroppable = ({ productIngredients, handleRemoveIn
       <h2 className="text-center font-bold text-2xl mb-2">Ingredientes</h2>
       <div
         className={cn(
-          'h-full w-full flex flex-col justify-center items-center text-gray-300 border-4 border-dashed border-gray-300 rounded-md p-4 overflow-hidden',
+          'product-ingredients h-full w-full flex flex-col justify-center items-center text-gray-300 border-4 border-dashed border-gray-300 rounded-md p-4 overflow-hidden',
           isDraggedOver ? 'bg-blue-300/50' : ''
         )}
         ref={columnRef}
@@ -75,7 +81,8 @@ export const ProductIngredientsDroppable = ({ productIngredients, handleRemoveIn
                   </Button>
                   <Button
                     onClick={() =>
-                      ingredient.product.documentId && handleRemoveIngredient(ingredient.product.documentId)
+                      ingredient.product.documentId &&
+                      handleRemoveIngredient(ingredient.product.documentId)
                     }
                   >
                     <Trash></Trash>

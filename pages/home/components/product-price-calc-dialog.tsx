@@ -1,6 +1,19 @@
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -8,6 +21,7 @@ import { UnitSelect } from '@/components/unit-select';
 import { Input } from '@/components/ui/input';
 import { UnitPriceConversor } from '@/utils/unit';
 import { Unit } from '@/features/unit/types/Unit';
+import { useJoyrideContext } from '@/providers/joyride-context';
 
 const formSchema = z.object({
   price: z.coerce.number(),
@@ -29,7 +43,12 @@ type ProductPriceCalcDialogProps = {
   onCalculate: (price: number) => void;
 };
 
-export function ProductPriceCalcDialog({ open, onOpenChange, onCalculate, targetUnit }: ProductPriceCalcDialogProps) {
+export function ProductPriceCalcDialog({
+  open,
+  onOpenChange,
+  onCalculate,
+  targetUnit,
+}: ProductPriceCalcDialogProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -42,28 +61,45 @@ export function ProductPriceCalcDialog({ open, onOpenChange, onCalculate, target
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     if (!values.unit || !values.unitId) return;
-    const price = UnitPriceConversor(values.unit, targetUnit, values.quantity, values.price);
+    const price = UnitPriceConversor(
+      values.unit,
+      targetUnit,
+      values.quantity,
+      values.price
+    );
     onCalculate(price ?? 0);
     form.reset();
   }
 
+  // #region JOYRIDE ------------------------------------------------------
+  const { stepIndex, setStepIndex } = useJoyrideContext();
+  // #endregion ------------------------------------------------------
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] price-calc-form">
         <DialogHeader>
           <DialogTitle>Calcule o preço por {targetUnit.name}</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 ">
             <FormField
               control={form.control}
               name="quantity"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="price-calc-form-quantity">
                   <FormLabel>Quantidade de produtos comprados</FormLabel>
                   <FormControl>
-                    <Input type="number" {...field} />
+                    <Input
+                      type="number"
+                      {...field}
+                      onBlur={() => {
+                        if (stepIndex === 6) {
+                          setStepIndex(stepIndex + 1);
+                        }
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -79,7 +115,9 @@ export function ProductPriceCalcDialog({ open, onOpenChange, onCalculate, target
                     <UnitSelect
                       {...field}
                       correlation={targetUnit.acronym}
-                      onValueChange={(_, option) => form.setValue('unit', option)}
+                      onValueChange={(_, option) =>
+                        form.setValue('unit', option)
+                      }
                     />
                   </FormControl>
                   <FormMessage />

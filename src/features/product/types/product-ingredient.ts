@@ -5,6 +5,6 @@ export type ProductIngredient = {
   product: Product;
 };
 
-export type ProductIngredientPopulated = ProductIngredient & {
+export type ProductIngredientPopulated = Omit<ProductIngredient, 'product'> & {
   product: ProductPopulated;
 };
