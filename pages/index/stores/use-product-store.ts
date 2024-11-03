@@ -15,6 +15,8 @@ type ProductStore = {
   setSelectedUnit: (unit: Unit | null) => void;
   priceCalcDialogOpen: boolean;
   setPriceCalcDialogOpen: (open: boolean) => void;
+  search: string;
+  setSearch: (search: string) => void;
 };
 
 export const useProductStore = create<ProductStore>()(
@@ -29,5 +31,7 @@ export const useProductStore = create<ProductStore>()(
     setSelectedUnit: (unit) => set({ selectedUnit: unit }),
     priceCalcDialogOpen: false,
     setPriceCalcDialogOpen: (open) => set({ priceCalcDialogOpen: open }),
+    search: '',
+    setSearch: (search) => set({ search }),
   }))
 );

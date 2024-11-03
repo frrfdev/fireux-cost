@@ -14,7 +14,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useProductStore } from '../stores/use-product-store';
 import { useUpdateProduct } from '@/features/product/hooks/use-update-product';
 import { ProductList } from './product.list';
-import { useGetProducts } from '@/features/product/hooks/use-get-products';
+import { useGetProductsInfinite } from '@/features/product/hooks/use-get-products';
 import { ProductIngredientConfigModal } from './product-ingredient-config.modal';
 import { useProductFormDragController } from '../hooks/use-product-form-drag-controller';
 import { Product, ProductPopulated } from '@/features/product/types/product';
@@ -74,12 +74,26 @@ export const ProductForm = () => {
   const setSelectedUnit = useProductStore((state) => state.setSelectedUnit);
   const priceCalcDialogOpen = useProductStore((state) => state.priceCalcDialogOpen);
   const setPriceCalcDialogOpen = useProductStore((state) => state.setPriceCalcDialogOpen);
+  const search = useProductStore((state) => state.search);
 
   const ingredients = form.watch('ingredients');
 
   const { mutateAsync: storeProduct, isPending } = useStoreProduct();
   const { mutateAsync: updateProduct, isPending: isUpdating } = useUpdateProduct();
-  const { data: products } = useGetProducts();
+
+  const {
+    data: products,
+    fetchNextPage,
+    isFetching,
+    hasNextPage,
+  } = useGetProductsInfinite({
+    pagination: {
+      pageSize: 25,
+    },
+    filters: {
+      name: search,
+    },
+  });
 
   const isManualPrice = form.watch('manualPrice');
 
@@ -89,7 +103,11 @@ export const ProductForm = () => {
   }
 
   function handleRemoveIngredient(ingredientId: string) {
-    const ingredient = products?.data?.find((p) => p.documentId === ingredientId);
+    const ingredient = products?.pages
+      .flat()
+      .map((page) => page.data)
+      .flat()
+      .find((p) => p.documentId === ingredientId);
 
     if (!ingredient) return;
 
@@ -126,6 +144,8 @@ export const ProductForm = () => {
             });
             queryClient.invalidateQueries({ queryKey: ['products'] });
             setProductEditing(null);
+            setSelectedUnit(null);
+            form.setFocus('name');
           },
         }
       );
@@ -140,19 +160,26 @@ export const ProductForm = () => {
       },
       {
         onSuccess: () => {
+          form.setFocus('name', { shouldSelect: true });
           form.reset(INITIAL_VALUES);
           toast({
             title: 'Successo 😃',
             description: 'O produto foi adicionado com sucesso',
           });
           queryClient.invalidateQueries({ queryKey: ['products'] });
+          setSelectedUnit(null);
         },
       }
     );
   }
 
   useProductFormDragController({
-    products: products?.data.map(convertToProductFormRegister) ?? [],
+    products:
+      products?.pages
+        .flat()
+        .map((page) => page.data)
+        .flat()
+        .map(convertToProductFormRegister) ?? [],
     form: form as UseFormReturn<Product>,
   });
 
@@ -205,23 +232,23 @@ export const ProductForm = () => {
               </FormItem>
             )}
           />
-          <Separator className="space-y-4"></Separator>
-          <FormField
-            control={form.control}
-            name="manualPrice"
-            render={({ field }) => (
-              <FormItem>
-                <div className="flex items-center gap-2 text-sm">
-                  <Switch checked={field.value} onCheckedChange={field.onChange} />
-                  {selectedUnit ? (
-                    <span>Definir Preço Por {selectedUnit?.name}?</span>
-                  ) : (
-                    <span className="text-red-500">Você precisa escolher uma unidade</span>
-                  )}
-                </div>
-              </FormItem>
-            )}
-          />
+          {selectedUnit ? (
+            <>
+              <Separator className="space-y-4"></Separator>
+              <FormField
+                control={form.control}
+                name="manualPrice"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      <span>Definir Preço Por {selectedUnit?.name}?</span>
+                    </div>
+                  </FormItem>
+                )}
+              />
+            </>
+          ) : null}
           {isManualPrice ? (
             <FormField
               control={form.control}
@@ -273,8 +300,14 @@ export const ProductForm = () => {
             className="w-full"
             isLoading={isPending || isUpdating}
             onClick={form.handleSubmit(onSubmit)}
+            disabled={!selectedUnit}
+            title={!selectedUnit ? 'Você precisa escolher uma unidade de base de cálculo' : ''}
           >
-            {productEditing ? 'Editar' : 'Criar'}
+            {!selectedUnit
+              ? 'Você precisa escolher uma unidade de base de cálculo'
+              : productEditing
+              ? 'Editar'
+              : 'Criar'}
           </Button>
           <Button type="button" className="w-full" variant="secondary" onClick={handleCancel}>
             Cancelar
@@ -282,7 +315,16 @@ export const ProductForm = () => {
         </div>
       </div>
       <ProductList
-        products={products?.data.filter((p) => !ingredients.find((i) => i.product.documentId === p.documentId)) ?? []}
+        isLoading={isFetching}
+        hasNextPage={hasNextPage}
+        loadMore={fetchNextPage}
+        products={
+          products?.pages
+            .flat()
+            .map((page) => page.data)
+            .flat()
+            .filter((p) => !ingredients.find((i) => i.product.documentId === p.documentId)) ?? []
+        }
       ></ProductList>
       {selectedUnit ? (
         <ProductPriceCalcDialog

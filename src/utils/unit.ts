@@ -28,7 +28,19 @@ export const UnitPriceConversor = (unit: Unit, targetUnit: Unit, quantity: numbe
         return price / quantity / 1000000;
       }
       break;
+    case 'L':
+      if (targetUnit.acronym === 'ml') {
+        return (price / quantity) * 1000;
+      }
+      break;
+    case 'ml':
+      if (targetUnit.acronym === 'L') {
+        return price / quantity / 1000;
+      }
+      break;
   }
 
   return price / quantity;
 };
+
+export const UNIT_CORRELATION = [['un.'], ['kg', 'g', 'mg'], ['L', 'ml']];

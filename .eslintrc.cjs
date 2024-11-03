@@ -2,6 +2,12 @@ module.exports = {
   rules: {
     'react-refresh/only-export-components': 'warn',
     'react/prop-types': 'off',
+    '@typescript-eslint/no-unused-vars': [
+      'error',
+      {
+        argsIgnorePattern: '^_',
+      },
+    ],
   },
   reportUnusedDisableDirectives: true,
   ignorePatterns: ['dist/*'],
@@ -10,7 +16,6 @@ module.exports = {
   settings: { react: { version: 'detect' } },
   plugins: ['react-refresh'],
   extends: [
-    'eslint:recommended',
     'plugin:react/recommended',
     'plugin:react/jsx-runtime',
     'plugin:react-hooks/recommended',

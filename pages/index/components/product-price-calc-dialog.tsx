@@ -76,7 +76,11 @@ export function ProductPriceCalcDialog({ open, onOpenChange, onCalculate, target
                 <FormItem>
                   <FormLabel>Qual foi o tipo de unidade de compra?</FormLabel>
                   <FormControl>
-                    <UnitSelect {...field} onValueChange={(_, option) => form.setValue('unit', option)} />
+                    <UnitSelect
+                      {...field}
+                      correlation={targetUnit.acronym}
+                      onValueChange={(_, option) => form.setValue('unit', option)}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

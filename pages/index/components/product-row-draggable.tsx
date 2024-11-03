@@ -26,7 +26,7 @@ export const ProductRowDraggable = ({ product }: Props) => {
   const setProductEditing = useProductStore((state) => state.setEditProduct);
   const productEditing = useProductStore((state) => state.editProduct);
 
-  const [isDragging, setIsDragging] = useState(false);
+  const [_isDragging, setIsDragging] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
   const { mutateAsync: deleteProduct, isPending: isDeleting } = useDeleteProduct();
@@ -73,7 +73,7 @@ export const ProductRowDraggable = ({ product }: Props) => {
   }, []);
 
   return (
-    <li
+    <div
       key={product.documentId}
       className={cn(
         'shadow-sm border border-gray-100 rounded-md p-2 bg-white grid grid-cols-3 gap-2 items-center justify-between cursor-grab'
@@ -102,7 +102,7 @@ export const ProductRowDraggable = ({ product }: Props) => {
         title="Confirmar exclusão do produto"
         description={`Tem certeza que deseja excluir o produto "${product.name}"?`}
       />
-      <div className="flex gap-2">
+      <div className="flex gap-2 justify-end">
         <Button
           variant="default"
           size="icon"
@@ -117,6 +117,6 @@ export const ProductRowDraggable = ({ product }: Props) => {
           <Trash size={16} className="text-white"></Trash>
         </Button>
       </div>
-    </li>
+    </div>
   );
 };
