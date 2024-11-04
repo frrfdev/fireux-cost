@@ -76,14 +76,28 @@ export function ProductPriceCalcDialog({
   // #endregion ------------------------------------------------------
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] price-calc-form">
+    <Dialog open={open} onOpenChange={onOpenChange} modal={stepIndex <= 0}>
+      <DialogContent
+        className="sm:max-w-[425px] price-calc-form"
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        onEscapeKeyDown={(e) => {
+          if (stepIndex > 0) {
+            e.preventDefault();
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Calcule o preço por {targetUnit.name}</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 ">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-4 "
+            autoFocus={false}
+          >
             <FormField
               control={form.control}
               name="quantity"
@@ -95,7 +109,7 @@ export function ProductPriceCalcDialog({
                       type="number"
                       {...field}
                       onBlur={() => {
-                        if (stepIndex === 6) {
+                        if (stepIndex === 6 && form.getValues('quantity') > 0) {
                           setStepIndex(stepIndex + 1);
                         }
                       }}
@@ -109,15 +123,24 @@ export function ProductPriceCalcDialog({
               control={form.control}
               name="unitId"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="price-calc-form-unit">
                   <FormLabel>Qual foi o tipo de unidade de compra?</FormLabel>
                   <FormControl>
                     <UnitSelect
                       {...field}
                       correlation={targetUnit.acronym}
-                      onValueChange={(_, option) =>
-                        form.setValue('unit', option)
-                      }
+                      onOpenChange={(open) => {
+                        if (open && stepIndex === 7) {
+                          setStepIndex(stepIndex + 1);
+                        }
+                      }}
+                      onValueChange={(_, option) => {
+                        if (!option) return;
+                        form.setValue('unit', option);
+                        if (stepIndex === 8) {
+                          setStepIndex(stepIndex + 1);
+                        }
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
@@ -128,10 +151,18 @@ export function ProductPriceCalcDialog({
               control={form.control}
               name="price"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="price-calc-form-price">
                   <FormLabel>Qual foi o preço total do produto?</FormLabel>
                   <FormControl>
-                    <Input type="number" {...field} />
+                    <Input
+                      type="number"
+                      {...field}
+                      onBlur={() => {
+                        if (stepIndex === 9) {
+                          setStepIndex(stepIndex + 1);
+                        }
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -139,7 +170,17 @@ export function ProductPriceCalcDialog({
             />
 
             <DialogFooter>
-              <Button type="submit">Calculate</Button>
+              <Button
+                type="submit"
+                className="price-calc-form-submit"
+                onClick={() => {
+                  if (stepIndex === 10) {
+                    setStepIndex(stepIndex + 1);
+                  }
+                }}
+              >
+                Calculate
+              </Button>
             </DialogFooter>
           </form>
         </Form>

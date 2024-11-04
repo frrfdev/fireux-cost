@@ -1,5 +1,5 @@
 export type PriceUnit = {
-  documentId?: string;
+  documentId: string;
   name: string;
   acronym: string;
 };

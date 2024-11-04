@@ -6,6 +6,7 @@
 body {
   margin: 0;
   font-family: sans-serif;
+  pointer-events: auto !important;
 }
 * {
   box-sizing: border-box;

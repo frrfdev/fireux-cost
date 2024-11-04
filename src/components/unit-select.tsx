@@ -9,9 +9,11 @@ import {
 } from './ui/select-paginated';
 import { SelectPaginated } from './ui/select-paginated';
 import { UNIT_CORRELATION } from '@/utils/unit';
+import { Unit } from '@/features/unit/types/Unit';
 
-type UnitSelectProps = SelectProps & {
+type UnitSelectProps = Omit<SelectProps, 'onValueChange'> & {
   onChange?: (value: string) => void;
+  onValueChange?: (value: string, option: Unit | null) => void;
   correlation?: string;
 };
 
