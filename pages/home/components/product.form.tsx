@@ -2,14 +2,7 @@ import { useForm, UseFormReturn } from 'react-hook-form';
 import { ProductIngredientsDroppable } from './product-ingredients.droppable';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  Form,
-  FormControl,
-  FormLabel,
-  FormItem,
-  FormField,
-  FormMessage,
-} from '@/components/ui/form';
+import { Form, FormControl, FormLabel, FormItem, FormField, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { UnitSelect } from '@/components/unit-select';
@@ -24,18 +17,12 @@ import { ProductList } from './product.list';
 import { useGetProductsInfinite } from '@/features/product/hooks/use-get-products';
 import { ProductIngredientConfigModal } from './product-ingredient-config.modal';
 import { useProductFormDragController } from '../hooks/use-product-form-drag-controller';
-import {
-  Product,
-  ProductFormRegister,
-  ProductPopulated,
-} from '@/features/product/types/product';
+import { Product, ProductFormRegister, ProductPopulated } from '@/features/product/types/product';
 import { ProductPriceCalcDialog } from './product-price-calc-dialog';
 import { useJoyrideContext } from '@/providers/joyride-context';
 import { useEffect } from 'react';
 
-export const convertToProductFormRegister = (
-  product: ProductPopulated
-): ProductFormRegister => {
+export const convertToProductFormRegister = (product: ProductPopulated): ProductFormRegister => {
   return {
     ...product,
     priceUnit: product.priceUnit?.documentId ?? '',
@@ -58,9 +45,7 @@ const convertToProduct = (product: ProductPopulated): Product => {
 };
 
 const productFormSchema = z.object({
-  name: z
-    .string()
-    .min(3, { message: 'O nome do produto deve ter pelo menos 3 caracteres' }),
+  name: z.string().min(3, { message: 'O nome do produto deve ter pelo menos 3 caracteres' }),
   priceUnit: z.string(),
   price: z.coerce.number(),
   manualPrice: z.boolean(),
@@ -98,31 +83,20 @@ export const ProductForm = () => {
 
   const setProductEditing = useProductStore((state) => state.setEditProduct);
   const productEditing = useProductStore((state) => state.editProduct);
-  const selectedProductIngredient = useProductStore(
-    (state) => state.selectedProductIngredient
-  );
-  const setSelectedProductIngredient = useProductStore(
-    (state) => state.setSelectedProductIngredient
-  );
-  const setConfigModalOpen = useProductStore(
-    (state) => state.setConfigModalOpen
-  );
+  const selectedProductIngredient = useProductStore((state) => state.selectedProductIngredient);
+  const setSelectedProductIngredient = useProductStore((state) => state.setSelectedProductIngredient);
+  const setConfigModalOpen = useProductStore((state) => state.setConfigModalOpen);
   const configModalOpen = useProductStore((state) => state.configModalOpen);
   const selectedUnit = useProductStore((state) => state.selectedUnit);
   const setSelectedUnit = useProductStore((state) => state.setSelectedUnit);
-  const priceCalcDialogOpen = useProductStore(
-    (state) => state.priceCalcDialogOpen
-  );
-  const setPriceCalcDialogOpen = useProductStore(
-    (state) => state.setPriceCalcDialogOpen
-  );
+  const priceCalcDialogOpen = useProductStore((state) => state.priceCalcDialogOpen);
+  const setPriceCalcDialogOpen = useProductStore((state) => state.setPriceCalcDialogOpen);
   const search = useProductStore((state) => state.search);
 
   const ingredients = form.watch('ingredients');
 
   const { mutateAsync: storeProduct, isPending } = useStoreProduct();
-  const { mutateAsync: updateProduct, isPending: isUpdating } =
-    useUpdateProduct();
+  const { mutateAsync: updateProduct, isPending: isUpdating } = useUpdateProduct();
 
   const {
     data: products,
@@ -267,24 +241,13 @@ export const ProductForm = () => {
       setStepIndex(stepIndex + 1);
     }
   }, [isManualPrice, stepIndex]);
-
-  useEffect(() => {
-    if (priceCalcDialogOpen && stepIndex === 4) {
-      setStepIndex(stepIndex + 1);
-    }
-  }, [priceCalcDialogOpen, stepIndex]);
   // #endregion ------------------------------------------------------
 
   return (
     <div className="grid grid-cols-3 w-full h-full overflow-hidden">
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-4 h-full shadow-lg p-4  product-form"
-        >
-          <h1 className="text-2xl font-bold">
-            {productEditing ? 'Editar' : 'Novo'} Produto
-          </h1>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 h-full shadow-lg p-4  product-form">
+          <h1 className="text-2xl font-bold">{productEditing ? 'Editar' : 'Novo'} Produto</h1>
           <FormField
             control={form.control}
             name="name"
@@ -339,10 +302,7 @@ export const ProductForm = () => {
                 render={({ field }) => (
                   <FormItem>
                     <div className="flex items-center gap-2 text-sm product-form-manual-price">
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
                       <span>Definir Custo Por {selectedUnit?.name}?</span>
                     </div>
                   </FormItem>
@@ -359,7 +319,12 @@ export const ProductForm = () => {
                   <FormLabel>Preço por Unidade (R$)</FormLabel>
                   <button
                     type="button"
-                    onClick={() => setPriceCalcDialogOpen(true)}
+                    onClick={() => {
+                      setPriceCalcDialogOpen(true);
+                      if (stepIndex === 5) {
+                        setStepIndex(stepIndex + 1);
+                      }
+                    }}
                     role="button"
                     className="product-form-price-calc text-xs underline cursor-pointer animate-pulse text-gray-500 user-select-none w-full text-start"
                   >
@@ -391,11 +356,7 @@ export const ProductForm = () => {
               style: 'currency',
               currency: 'BRL',
             }).format(
-              ingredients.reduce(
-                (acc, ingredient) =>
-                  acc + ingredient.product.price * ingredient.quantity,
-                0
-              )
+              ingredients.reduce((acc, ingredient) => acc + ingredient.product.price * ingredient.quantity, 0)
             )}/${selectedUnit?.acronym ?? 'N.I'}`}</span>
           </div>
         ) : null}
@@ -406,11 +367,7 @@ export const ProductForm = () => {
             isLoading={isPending || isUpdating}
             onClick={form.handleSubmit(onSubmit)}
             disabled={!selectedUnit}
-            title={
-              !selectedUnit
-                ? 'Você precisa escolher uma unidade de base de cálculo'
-                : ''
-            }
+            title={!selectedUnit ? 'Você precisa escolher uma unidade de base de cálculo' : ''}
           >
             {!selectedUnit
               ? 'Você precisa escolher uma unidade de base de cálculo'
@@ -418,12 +375,7 @@ export const ProductForm = () => {
               ? 'Editar'
               : 'Criar'}
           </Button>
-          <Button
-            type="button"
-            className="w-full"
-            variant="secondary"
-            onClick={handleCancel}
-          >
+          <Button type="button" className="w-full" variant="secondary" onClick={handleCancel}>
             Cancelar
           </Button>
         </div>
@@ -437,10 +389,7 @@ export const ProductForm = () => {
             .flat()
             .map((page) => page.data)
             .flat()
-            .filter(
-              (p) =>
-                !ingredients.find((i) => i.product.documentId === p.documentId)
-            ) ?? []
+            .filter((p) => !ingredients.find((i) => i.product.documentId === p.documentId)) ?? []
         }
       ></ProductList>
       {selectedUnit ? (
@@ -461,10 +410,7 @@ export const ProductForm = () => {
             form.setValue(
               'ingredients',
               ingredients.map((p) =>
-                p.product.documentId ===
-                updatedProductIngredient.product.documentId
-                  ? updatedProductIngredient
-                  : p
+                p.product.documentId === updatedProductIngredient.product.documentId ? updatedProductIngredient : p
               )
             );
           }}
