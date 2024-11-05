@@ -1,11 +1,9 @@
 /** @type {import('tailwindcss').Config} */
-export default {
-  darkMode: ['class'],
+module.exports = {
   content: [
-    './index.html',
     './pages/**/*.{js,ts,jsx,tsx}',
+    './components/**/*.{js,ts,jsx,tsx}',
     './src/**/*.{js,ts,jsx,tsx}',
-    './renderer/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {
     extend: {
@@ -56,7 +54,26 @@ export default {
           5: 'hsl(var(--chart-5))',
         },
       },
+      animation: {
+        blob: 'blob 7s infinite',
+      },
+      keyframes: {
+        blob: {
+          '0%': {
+            transform: 'translate(0px, 0px) scale(1)',
+          },
+          '33%': {
+            transform: 'translate(30px, -50px) scale(1.1)',
+          },
+          '66%': {
+            transform: 'translate(-20px, 20px) scale(0.9)',
+          },
+          '100%': {
+            transform: 'translate(0px, 0px) scale(1)',
+          },
+        },
+      },
     },
   },
-  plugins: [require('tailwindcss-animate')],
+  plugins: [],
 };
